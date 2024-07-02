@@ -1,30 +1,32 @@
-import { useEffect, useState } from "react";
-import { Job } from "./types";  
+import { useState, useEffect } from "react";
+import { Job } from "./types";
 
-interface FetchResult {
-  isLoading: boolean;
+interface UseFetchResult {
   data: Job[];
-  error: string | null;
+  isLoading: boolean;
+  refetch: () => void;
 }
 
-const useFetch = (): FetchResult => {
-  const API_URL = 'http://3.34.200.34/jobs';
+const useFetch = ({
+  url
+} = {
+  url: 'http://3.34.200.34/jobs'
+}): UseFetchResult => {
   const [data, setData] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL);
-      const responseData = await response.json();
-      if (response.ok) {
-        setData(responseData.data);
-      } else {
-        throw new Error(responseData.message || 'Failed to fetch data');
+      const response = await fetch(url);
+      const result = await response.json();
+      console.log('API response:', result);
+      if (result.success) {
+        setData(result.data as Job[]);
+        console.log('Jobs data:', result.data);
       }
-    } catch (err) {
-      setError((err as Error).message || 'Failed to fetch data');
+    } catch (error) {
+      console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -32,13 +34,13 @@ const useFetch = (): FetchResult => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [url]);
 
   return {
     isLoading,
     data,
-    error,
+    refetch: fetchData,
   };
-}
+};
 
 export default useFetch;
